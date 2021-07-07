@@ -17,6 +17,49 @@ class PMSController
 		self::$_db = $client->pms;
 	}
 
+	public function authenticate($credentials)
+	{
+		$_collection = self::$_db->employees;
+		try {
+			$result = $_collection->findOne(['login' => $credentials->login]);
+			if ($result == null) {
+				self::notify("err", "UDNE", "User Does Not Exist : the given login does not exist.");
+			} else {
+				if (password_verify($credentials->passwd, $result['shadow'])) {
+					self::notify("s", "USA", "User Successfully Authenticated", $result['profile']);
+				} else {
+					self::notify("err", "WPWD", "Wrong Password : The entered password is incorrect.");
+				}
+			}
+		} catch (Exception $e) {
+			self::notify("uerr", "UNEX", $e->getMessage());
+		}
+	}
+
+	public function fetchEmployeeInfo($employeeID)
+	{
+		$_collection = self::$_db->employees;
+		try {
+			$result = $_collection->findOne(
+				['_id' => new MongoDB\BSON\ObjectId($employeeID)],
+				['projection' => [
+					'_id' => 1,
+					'nom' => 1,
+					'prenom' => 1,
+					'tel' => 1,
+					'email' => 1
+				]]
+			);
+			if ($result == null) {
+				self::notify("err", "ENF", "Employee Not Found : the given id may be inexistant.");
+			} else {
+				self::notify("s", "EDF", "Employee Data Found", $result);
+			}
+		} catch (Exception $e) {
+			self::notify("uerr", "UNEX", $e->getMessage());
+		}
+	}
+
 	public function searchProject($projectName)
 	{
 		$_collection = self::$_db->projects;
@@ -25,7 +68,7 @@ class PMSController
 			if ($result == null) {
 				self::notify("err", "NPF", "No Project Found for the given name");
 			} else {
-				echo json_encode($result);
+				self::notify("s", "PDF", "Project Data Found", $result);
 			}
 		} catch (Exception $e) {
 			self::notify("uerr", "UNEX", $e->getMessage());
