@@ -5,8 +5,8 @@ include '../../config/controller.php';
 // Get the posted data
 $_data = file_get_contents("php://input");
 
-$clientData = json_decode($_data);
+$_clientData = json_decode($_data);
 
 $woman = new SecretaryController();
 
-$woman->addClient($clientData);
+$woman->addClient($_clientData);

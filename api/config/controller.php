@@ -65,10 +65,6 @@ class PMSController
 class SecretaryController extends PMSController
 {
 	private $_collection;
-	public function __construct()
-	{
-		parent::__construct();
-	}
 
 	public function addProject($projectData)
 	{
@@ -80,35 +76,6 @@ class SecretaryController extends PMSController
 			parent::notify("uerr", "UNEX", $e->getMessage());
 		}
 	}
-
-	// public function searchProject($projectName)
-	// {
-	// 	$this->_collection = parent::$_db->projects;
-	// 	try {
-	// 		$result = $this->_collection->findOne(['nom' => $projectName]);
-	// 		if ($result == null) {
-	// 			parent::notify("err", "NPF", "No Project Found for the given name");
-	// 		} else {
-	// 			echo json_encode($result);
-	// 		}
-	// 	} catch (Exception $e) {
-	// 		parent::notify("uerr", "UNEX", $e->getMessage());
-	// 	}
-	// }
-
-	// public function updateProject($projectID, $newData)
-	// {
-	// 	$this->_collection = parent::$_db->projects;
-	// 	try {
-	// 		$this->_collection->updateOne(
-	// 			['_id' => new MongoDB\BSON\ObjectId($projectID)],
-	// 			['$set' => $newData]
-	// 		);
-	// 		parent::notify("s", "PSU", "Project Successfully Updated");
-	// 	} catch (Exception $e) {
-	// 		parent::notify("uerr", "UNEX", $e);
-	// 	}
-	// }
 
 	public function addClient($clientData)
 	{
@@ -130,6 +97,50 @@ class SecretaryController extends PMSController
 				['$set' => $newData]
 			);
 			parent::notify("s", "CSU", "Client Successfully Updated");
+		} catch (Exception $e) {
+			parent::notify("uerr", "UNEX", $e);
+		}
+	}
+}
+
+class AdministratorController extends PMSController
+{
+	private $_collection;
+
+	public function __construct()
+	{
+		parent::__construct();
+		$this->_collection = parent::$_db->employees;
+	}
+
+	public function addEmployee($employeeData)
+	{
+		try {
+			$this->_collection->insertOne($employeeData);
+			parent::notify("s", "ESA", "Employee Successfully Added");
+		} catch (Exception $e) {
+			parent::notify("uerr", "UNEX", $e->getMessage());
+		}
+	}
+
+	public function updateEmployee($employeeID, $newData)
+	{
+		try {
+			$this->_collection->updateOne(
+				['_id' => new MongoDB\BSON\ObjectId($employeeID)],
+				['$set' => $newData]
+			);
+			parent::notify("s", "USU", "User Successfully Updated");
+		} catch (Exception $e) {
+			parent::notify("uerr", "UNEX", $e);
+		}
+	}
+
+	public function deleteEmployee($employeeID)
+	{
+		try {
+			$this->_collection->deleteOne(['_id' => new MongoDB\BSON\ObjectId($employeeID)]);
+			parent::notify("s", "USD", "User Successfully Deleted");
 		} catch (Exception $e) {
 			parent::notify("uerr", "UNEX", $e);
 		}
