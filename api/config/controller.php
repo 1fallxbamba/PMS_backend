@@ -1,5 +1,9 @@
 <?php
 
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Headers: *');
+header('Access-Control-Allow-Methods: *');
+
 /**
  * PMS Controller v1.0, @author : 1fallxbamba
  */
@@ -26,7 +30,13 @@ class PMSController
 				self::notify("err", "UDNE", "User Does Not Exist : the given login does not exist.");
 			} else {
 				if (password_verify($credentials->passwd, $result['shadow'])) {
-					self::notify("s", "USA", "User Successfully Authenticated", $result['profile']);
+					self::notify("s", "USA", "User Successfully Authenticated", array(
+						'id' => $result['_id'],
+						'profile' => $result['profile'],
+						'nom' => $result['nom'],
+						'prenom' => $result['prenom'],
+						'email' => $result['email']
+					));
 				} else {
 					self::notify("err", "WPWD", "Wrong Password : The entered password is incorrect.");
 				}
@@ -43,11 +53,11 @@ class PMSController
 			$result = $_collection->findOne(
 				['_id' => new MongoDB\BSON\ObjectId($employeeID)],
 				['projection' => [
-					'_id' => 1,
 					'nom' => 1,
 					'prenom' => 1,
 					'tel' => 1,
-					'email' => 1
+					'email' => 1,
+					'profile' => 1
 				]]
 			);
 			if ($result == null) {
