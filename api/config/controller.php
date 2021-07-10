@@ -53,8 +53,8 @@ class PMSController
 			$result = $_collection->findOne(
 				['_id' => new MongoDB\BSON\ObjectId($employeeID)],
 				['projection' => [
-					'nom' => 1,
-					'prenom' => 1,
+					'name' => 1,
+					'fName' => 1,
 					'tel' => 1,
 					'email' => 1,
 					'profile' => 1
@@ -70,11 +70,46 @@ class PMSController
 		}
 	}
 
+	public function fetchProjects()
+	{
+		$_collection = self::$_db->projects;
+		try {
+			$result = $_collection->find();
+
+			if ($result == null) {
+				self::notify("err", "NPF", "No Projects Found.");
+			} else {
+
+				$res = array();
+
+				foreach ($result as $document) {
+					array_push($res, $document);
+				 }
+				self::notify("s", "PF", "Projects Found", $res);
+			}
+		} catch (Exception $e) {
+			self::notify("uerr", "UNEX", $e->getMessage());
+		}
+	}
+
+	public function fetchProject($projectID)
+	{
+		$_collection = self::$_db->projects;
+		try {
+			$result = $_collection->findOne(['_id' => new MongoDB\BSON\ObjectId($projectID)]);
+
+		   self::notify("s", "PDF", "Project Data Found", $result);
+		
+		} catch (Exception $e) {
+			self::notify("uerr", "UNEX", $e->getMessage());
+		}
+	}
+
 	public function searchProject($projectName)
 	{
 		$_collection = self::$_db->projects;
 		try {
-			$result = $_collection->findOne(['nom' => $projectName]);
+			$result = $_collection->findOne(['name' => $projectName]);
 			if ($result == null) {
 				self::notify("err", "NPF", "No Project Found for the given name");
 			} else {
