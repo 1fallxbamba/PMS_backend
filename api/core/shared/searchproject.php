@@ -6,5 +6,5 @@ $_projectName = isset($_GET['name']) ? $_GET['name'] : die(json_encode(array('ER
 
 $pmsUser = new PMSController();
 
-$pmsUSer->searchProject($_projectName);
+$pmsUser->searchProject($_projectName);
 

@@ -1,5 +1,9 @@
 <?php
 
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Headers: *');
+header('Access-Control-Allow-Methods: *');
+
 /**
  * PMS Controller v1.0, @author : 1fallxbamba
  */
@@ -17,15 +21,99 @@ class PMSController
 		self::$_db = $client->pms;
 	}
 
+	public function authenticate($credentials)
+	{
+		$_collection = self::$_db->employees;
+		try {
+			$result = $_collection->findOne(['login' => $credentials->login]);
+			if ($result == null) {
+				self::notify("err", "UDNE", "User Does Not Exist : the given login does not exist.");
+			} else {
+				if (password_verify($credentials->passwd, $result['shadow'])) {
+					self::notify("s", "USA", "User Successfully Authenticated", array(
+						'id' => $result['_id'],
+						'profile' => $result['profile'],
+						'nom' => $result['nom'],
+						'prenom' => $result['prenom'],
+						'email' => $result['email']
+					));
+				} else {
+					self::notify("err", "WPWD", "Wrong Password : The entered password is incorrect.");
+				}
+			}
+		} catch (Exception $e) {
+			self::notify("uerr", "UNEX", $e->getMessage());
+		}
+	}
+
+	public function fetchEmployeeInfo($employeeID)
+	{
+		$_collection = self::$_db->employees;
+		try {
+			$result = $_collection->findOne(
+				['_id' => new MongoDB\BSON\ObjectId($employeeID)],
+				['projection' => [
+					'name' => 1,
+					'fName' => 1,
+					'tel' => 1,
+					'email' => 1,
+					'profile' => 1
+				]]
+			);
+			if ($result == null) {
+				self::notify("err", "ENF", "Employee Not Found : the given id may be inexistant.");
+			} else {
+				self::notify("s", "EDF", "Employee Data Found", $result);
+			}
+		} catch (Exception $e) {
+			self::notify("uerr", "UNEX", $e->getMessage());
+		}
+	}
+
+	public function fetchProjects()
+	{
+		$_collection = self::$_db->projects;
+		try {
+			$result = $_collection->find();
+
+			if ($result == null) {
+				self::notify("err", "NPF", "No Projects Found.");
+			} else {
+
+				$res = array();
+
+				foreach ($result as $document) {
+					array_push($res, $document);
+				 }
+				self::notify("s", "PF", "Projects Found", $res);
+			}
+		} catch (Exception $e) {
+			self::notify("uerr", "UNEX", $e->getMessage());
+		}
+	}
+
+	public function fetchProject($projectID)
+	{
+		$_collection = self::$_db->projects;
+		try {
+			$result = $_collection->findOne(['_id' => new MongoDB\BSON\ObjectId($projectID)]);
+
+		   self::notify("s", "PDF", "Project Data Found", $result);
+		
+		} catch (Exception $e) {
+			self::notify("uerr", "UNEX", $e->getMessage());
+		}
+	}
+
 	public function searchProject($projectName)
 	{
 		$_collection = self::$_db->projects;
 		try {
-			$result = $_collection->findOne(['nom' => $projectName]);
+			$result = $_collection->findOne(['name' => $projectName]);
 			if ($result == null) {
 				self::notify("err", "NPF", "No Project Found for the given name");
 			} else {
-				echo json_encode($result);
+				self::notify("s", "PDF", "Project Data Found", $result);
 			}
 		} catch (Exception $e) {
 			self::notify("uerr", "UNEX", $e->getMessage());
