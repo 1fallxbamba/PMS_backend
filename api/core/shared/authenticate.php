@@ -9,4 +9,3 @@ $_credentials = json_decode($_data);
 $pmsUser = new PMSController();
 
 $pmsUser->authenticate($_credentials);
-

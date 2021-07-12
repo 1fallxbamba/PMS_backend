@@ -33,8 +33,8 @@ class PMSController
 					self::notify("s", "USA", "User Successfully Authenticated", array(
 						'id' => $result['_id'],
 						'profile' => $result['profile'],
-						'nom' => $result['nom'],
-						'prenom' => $result['prenom'],
+						'lName' => $result['lName'],
+						'fName' => $result['fName'],
 						'email' => $result['email']
 					));
 				} else {
@@ -70,6 +70,27 @@ class PMSController
 		}
 	}
 
+	public function fetchClientNames()
+	{
+		$_collection = self::$_db->clients;
+		try {
+			$result = $_collection->find([], ['projection' => ['name' => 1]]);
+			if ($result == null) {
+				self::notify("err", "NCF", "No Clients Found.");
+			} else {
+
+				$res = array();
+
+				foreach ($result as $document) {
+					array_push($res, $document->name);
+				}
+				self::notify("s", "CF", "Clients Found", $res);
+			}
+		} catch (Exception $e) {
+			self::notify("uerr", "UNEX", $e->getMessage());
+		}
+	}
+
 	public function fetchProjects()
 	{
 		$_collection = self::$_db->projects;
@@ -84,7 +105,7 @@ class PMSController
 
 				foreach ($result as $document) {
 					array_push($res, $document);
-				 }
+				}
 				self::notify("s", "PF", "Projects Found", $res);
 			}
 		} catch (Exception $e) {
@@ -98,8 +119,7 @@ class PMSController
 		try {
 			$result = $_collection->findOne(['_id' => new MongoDB\BSON\ObjectId($projectID)]);
 
-		   self::notify("s", "PDF", "Project Data Found", $result);
-		
+			self::notify("s", "PDF", "Project Data Found", $result);
 		} catch (Exception $e) {
 			self::notify("uerr", "UNEX", $e->getMessage());
 		}
@@ -109,11 +129,17 @@ class PMSController
 	{
 		$_collection = self::$_db->projects;
 		try {
-			$result = $_collection->findOne(['name' => $projectName]);
+			$result = $_collection->find(['name' => new \MongoDB\BSON\Regex($projectName)]);
 			if ($result == null) {
 				self::notify("err", "NPF", "No Project Found for the given name");
 			} else {
-				self::notify("s", "PDF", "Project Data Found", $result);
+				$res = array();
+
+				foreach ($result as $document) {
+					array_push($res, $document);
+				}
+
+				self::notify("s", "PDF", "Project Data Found", $res);
 			}
 		} catch (Exception $e) {
 			self::notify("uerr", "UNEX", $e->getMessage());
@@ -162,6 +188,28 @@ class SecretaryController extends PMSController
 			parent::notify("s", "PSA", "Project Successfully Added");
 		} catch (Exception $e) {
 			parent::notify("uerr", "UNEX", $e->getMessage());
+		}
+	}
+
+	public function fetchClients()
+	{
+		$_collection = parent::$_db->clients;
+		try {
+			$result = $_collection->find();
+
+			if ($result == null) {
+				self::notify("err", "NCF", "No Clients Found.");
+			} else {
+
+				$res = array();
+
+				foreach ($result as $document) {
+					array_push($res, $document);
+				}
+				self::notify("s", "CF", "Clients Found", $res);
+			}
+		} catch (Exception $e) {
+			self::notify("uerr", "UNEX", $e->getMessage());
 		}
 	}
 
@@ -224,6 +272,28 @@ class AdministratorController extends PMSController
 		}
 	}
 
+	public function fetchEmployees()
+	{
+		$_collection = parent::$_db->employees;
+		try {
+			$result = $_collection->find();
+
+			if ($result == null) {
+				self::notify("err", "NEF", "No Employee Found.");
+			} else {
+
+				$res = array();
+
+				foreach ($result as $document) {
+					array_push($res, $document);
+				}
+				self::notify("s", "EF", "Employees Found", $res);
+			}
+		} catch (Exception $e) {
+			self::notify("uerr", "UNEX", $e->getMessage());
+		}
+	}
+
 	public function deleteEmployee($employeeID)
 	{
 		try {
@@ -231,6 +301,34 @@ class AdministratorController extends PMSController
 			parent::notify("s", "USD", "User Successfully Deleted");
 		} catch (Exception $e) {
 			parent::notify("uerr", "UNEX", $e);
+		}
+	}
+}
+
+class DirectorController extends PMSController
+{
+
+	public function fetchManagersInfo()
+	{
+		$_collection = parent::$_db->employees;
+		try {
+			$result = $_collection->find(['profile' => 'Chef de projet'], ['projection' => ['fName' => 1, 'lName' => 1]]);
+
+			if ($result == null) {
+				self::notify("err", "NMF", "No Manager Found.");
+			} else {
+
+				$res = array();
+
+				foreach ($result as $document) {
+					array_push($res, $document);
+				}
+
+				self::notify("s", "MDF", "Manager Data Found", $res);
+
+			}
+		} catch (Exception $e) {
+			self::notify("uerr", "UNEX", $e->getMessage());
 		}
 	}
 }
